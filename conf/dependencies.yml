@@ -2,3 +2,6 @@
 
 require:
     - play
+    - com.sun.jersey -> jersey-core 1.17.1
+    - com.sun.jersey -> jersey-client 1.17.1
+    - com.google.guava -> guava 14.0.1
