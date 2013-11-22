@@ -6,7 +6,6 @@ import europeancentralbank.response.EuropeanCentralBankExchange;
 import europeancentralbank.response.ExchangeRate;
 import europeancentralbank.response.ExchangeRateTimes;
 import europeancentralbank.supplier.DefaultRestResourceSupplier;
-import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 import play.test.UnitTest;
@@ -16,6 +15,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 public class EuropaCurrencyApiClientIntegrationTest extends UnitTest {
@@ -53,8 +53,8 @@ public class EuropaCurrencyApiClientIntegrationTest extends UnitTest {
         assertThat(exchangeRates.size(), is(NUMBER_OF_EXCHANGE_RATES));
 
         for (ExchangeRate exchangeRate: exchangeRates) {
-            assertThat(exchangeRate.getCurrency(), is(not(CoreMatchers.<Object>nullValue())));
-            assertThat(exchangeRate.getRate(), is(not(CoreMatchers.<Object>nullValue())));
+            assertThat(exchangeRate.getCurrency(), is(not(nullValue())));
+            assertThat(exchangeRate.getRate(), is(not(nullValue())));
         }
     }
 }

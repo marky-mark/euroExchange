@@ -5,3 +5,6 @@ require:
     - com.sun.jersey -> jersey-core 1.17.1
     - com.sun.jersey -> jersey-client 1.17.1
     - com.google.guava -> guava 14.0.1
+    - com.typesafe.akka -> akka-actor_2.10 2.1.0
+    - com.netflix.astyanax -> astyanax 1.56.34
+    - org.hamcrest -> hamcrest-library 1.3
