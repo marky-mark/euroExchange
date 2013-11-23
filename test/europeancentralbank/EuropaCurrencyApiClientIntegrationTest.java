@@ -1,7 +1,5 @@
-package europeancentralbannk.response;
+package europeancentralbank;
 
-import europeancentralbank.CurrencyApiClient;
-import europeancentralbank.EuropaCurrencyApiClient;
 import europeancentralbank.response.EuropeanCentralBankExchange;
 import europeancentralbank.response.ExchangeRate;
 import europeancentralbank.response.ExchangeRateTimes;
@@ -27,12 +25,12 @@ public class EuropaCurrencyApiClientIntegrationTest extends UnitTest {
     @Before
     public void setup() throws URISyntaxException {
         DefaultRestResourceSupplier restResourceSupplier = new DefaultRestResourceSupplier(new URI(EUROPA_EU_API));
-        europaCurrencyApi = new EuropaCurrencyApiClient(restResourceSupplier);
+        europaCurrencyApi = new EuropeanCentralBankApiClient(restResourceSupplier);
     }
 
     @Test
     public void shouldDownloadDailyRate() {
-        EuropeanCentralBankExchange dailyRate = europaCurrencyApi.getDailyCurrencies();
+        EuropeanCentralBankExchange dailyRate = europaCurrencyApi.getLatestRates();
         List<ExchangeRateTimes> dailyRates = dailyRate.getExchangeRateWrapper().getExchangeRateTimes();
         assertThat(dailyRates.size(), is(1));
         assertAllDataIsNotNull(dailyRates.get(0).getExchangeRates());

@@ -7,6 +7,10 @@ public class ExchangeRateDaoConstants {
     public static final String RATE = "rate";
     public static final String UUID = "uuid";
 
+    public static final String DROP_TABLE_STATEMENT =
+            String.format("DROP TABLE %s",
+                    TABLE_NAME);
+
     public static final String CREATE_STATEMENT =
             String.format("CREATE TABLE %s ( %s TIMEUUID, %s TIMESTAMP, %s VARCHAR, %s DOUBLE, PRIMARY KEY (%s))",
                     TABLE_NAME, UUID, DATE, CODE, RATE, UUID);
@@ -22,4 +26,8 @@ public class ExchangeRateDaoConstants {
     public static final String FIND_EXCHANGE_RATES_FOR_CODE_BETWEEN_DATES_STATEMENT =
             String.format("SELECT * FROM %s WHERE %s = ? AND %s < ? AND %s > ? ALLOW FILTERING;",
                     TABLE_NAME, CODE, DATE, DATE);
+
+    public static final String FIND_EXCHANGE_RATES_BETWEEN_DATES_STATEMENT =
+            String.format("SELECT * FROM %s WHERE %s < ? AND %s > ? ALLOW FILTERING;",
+                    TABLE_NAME, DATE, DATE);
 }

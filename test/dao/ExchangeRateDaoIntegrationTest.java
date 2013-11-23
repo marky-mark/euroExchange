@@ -1,6 +1,7 @@
 package dao;
 
 import org.joda.time.DateTime;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import play.test.UnitTest;
@@ -17,12 +18,18 @@ import static org.hamcrest.CoreMatchers.is;
  */
 public class ExchangeRateDaoIntegrationTest extends UnitTest {
 
+    public static final int TEST_PORT = 9160;
     private ExchangeRateDao euroExchangeDAO;
 
     @Before
     public void init() {
         euroExchangeDAO = new ExchangeRateDaoImpl();
-        euroExchangeDAO.init();
+        euroExchangeDAO.init(TEST_PORT);
+    }
+
+    @After
+    public void tearDown() {
+        euroExchangeDAO.dropTable();
     }
 
     /**
@@ -54,5 +61,18 @@ public class ExchangeRateDaoIntegrationTest extends UnitTest {
         assertThat(rates.get(0), is(rate2));
         assertThat(rates.get(1), is(rate3));
         assertThat(rates.get(2), is(rate1));
+    }
+
+    @Test
+    public void shouldFindNoExchangeRates() {
+
+        Date timestamp1 = new DateTime().plusDays(5).toDate();
+        double rate1 = 8.01;
+        euroExchangeDAO.insert(timestamp1, "TEST", rate1);
+
+        DateTime nextDay = new DateTime().plusDays(1);
+        DateTime dayBefore = new DateTime().minusDays(1);
+        Map<Date, Double> exchangeRates = euroExchangeDAO.findRatesForCodeBetweenDates("TEST", nextDay.toDate(), dayBefore.toDate());
+        assertThat(exchangeRates.size(), is(0));
     }
 }

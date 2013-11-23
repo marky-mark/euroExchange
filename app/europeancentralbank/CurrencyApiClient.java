@@ -4,6 +4,6 @@ package europeancentralbank;
 import europeancentralbank.response.EuropeanCentralBankExchange;
 
 public interface CurrencyApiClient {
-    EuropeanCentralBankExchange getDailyCurrencies();
+    EuropeanCentralBankExchange getLatestRates();
     EuropeanCentralBankExchange getRatesOverLast90Days();
 }

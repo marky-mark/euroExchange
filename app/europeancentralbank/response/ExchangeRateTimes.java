@@ -29,12 +29,13 @@ public class ExchangeRateTimes {
         return this.exchangeRates;
     }
 
-    public Date getTime() {
+    public Date getDate() {
         return time;
     }
 
-    public void setTime(Date value) {
+    public void setDate(Date value) {
         this.time = value;
     }
+
 
 }

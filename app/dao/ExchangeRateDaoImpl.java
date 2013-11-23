@@ -35,6 +35,7 @@ import java.util.TreeMap;
 public class ExchangeRateDaoImpl implements ExchangeRateDao {
 
     public static final String KEYSPACE_NAME = "euro_exchange_rate";
+    public static final int NO_ROWS = 0;
     private AstyanaxContext<Keyspace> context;
     private Keyspace keyspace;
     private ColumnFamily<Integer, String> exchangeRateColumnFamily;
@@ -42,16 +43,18 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
     /**
      * Setup database and connections
      */
-    public void init() {
-        initDatabaseConnection();
+    public void init(int port) {
+        initDatabaseConnection(port);
         createColumnFamily();
         createSecondaryIndex();
     }
 
     /**
      * Initialises the netflix connection to the database
+     *
+     * @param port port to connect to
      */
-    private void initDatabaseConnection() {
+    private void initDatabaseConnection(int port) {
         Logger.debug("initializing database");
 
         context = new AstyanaxContext.Builder()
@@ -61,9 +64,9 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
                         .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
                 )
                 .withConnectionPoolConfiguration(new ConnectionPoolConfigurationImpl("MyConnectionPool")
-                        .setPort(9160)
+                        .setPort(port)
                         .setMaxConnsPerHost(1)
-                        .setSeeds("127.0.0.1:9160")
+                        .setSeeds("127.0.0.1:" + port)
                 )
                 .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
                         .setCqlVersion("3.0.0")
@@ -93,8 +96,8 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
                     .withCql(ExchangeRateDaoConstants.CREATE_STATEMENT)
                     .execute();
         } catch (ConnectionException e) {
-            Logger.error("failed to create CF", e);
-            throw new RuntimeException("failed to create CF", e);
+            Logger.error("failed to create tables", e);
+            throw new ExchangeRateDaoException(e);
         }
     }
 
@@ -109,8 +112,24 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
                     .withCql(ExchangeRateDaoConstants.CREATE_SECONDARY_INDEX_STATEMENT)
                     .execute();
         } catch (ConnectionException e) {
-            Logger.error("failed to create CF", e);
-            throw new RuntimeException("failed to create CF", e);
+            Logger.error("failed to create secondary index", e);
+            throw new ExchangeRateDaoException(e);
+        }
+    }
+
+    /**
+     * Drop the table - mainly for tests (be careful)
+     */
+    public void dropTable() {
+        Logger.debug("CQL: dropping table");
+        try {
+            OperationResult<CqlResult<Integer, String>> result = keyspace
+                    .prepareQuery(exchangeRateColumnFamily)
+                    .withCql(ExchangeRateDaoConstants.DROP_TABLE_STATEMENT)
+                    .execute();
+        } catch (ConnectionException e) {
+            Logger.error("failed to drop table", e);
+            throw new ExchangeRateDaoException(e);
         }
     }
 
@@ -136,8 +155,8 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
                     .withDoubleValue(rate)
                     .execute();
         } catch (ConnectionException e) {
-            Logger.error("failed to write data to C*", e);
-            throw new RuntimeException("failed to write data to C*", e);
+            Logger.error("failed to write data to Cassandra", e);
+            throw new ExchangeRateDaoException(e);
         }
         Logger.debug("insert ok");
     }
@@ -155,12 +174,12 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
 
     public Map<Date, Double> findRatesForCodeBetweenDates(String code, Date lessThan, Date moreThan) {
 
-        Logger.debug("finding exchange rates between dates");
+        Logger.debug("finding exchange rates for code between dates");
 
         removeTimeFromDate(lessThan);
         removeTimeFromDate(moreThan);
 
-        Map<Date, Double> rates = new TreeMap<Date, Double> ();
+        Map<Date, Double> rates = new TreeMap<Date, Double>();
 
         try {
 
@@ -180,8 +199,8 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
                 rates.put(date, rate);
             }
         } catch (ConnectionException e) {
-            Logger.error("failed to read from C*", e);
-            throw new RuntimeException("failed to read from C*", e);
+            Logger.error("failed to read from Cassandra", e);
+            throw new ExchangeRateDaoException(e);
         }
 
         return rates;
