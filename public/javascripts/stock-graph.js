@@ -1,3 +1,8 @@
+
+function remove() {
+    d3.select("svg").remove();
+}
+
 function createGraph(code) {
     var margin = {top: 20, right: 20, bottom: 30, left: 50},
         width = 960 - margin.left - margin.right,
@@ -28,6 +33,7 @@ function createGraph(code) {
             return y(d.close);
         });
 
+    d3.select("svg").remove();
     var svg = d3.select("body").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -38,18 +44,15 @@ function createGraph(code) {
     console.log("fetching " + url);
 
     d3.json(url, function(error, data) {
-        console.log(data);
         data.forEach(function(d) {
             d.date = parseDate(d.date);
             d.close = +d.rate;
         });
 
         x.domain(d3.extent(data, function(d) {
-            console.log(d.date);
             return d.date;
         }));
         y.domain([0, d3.max(data, function(d) {
-            console.log(d.close);
             return d.close;
         })]);
 

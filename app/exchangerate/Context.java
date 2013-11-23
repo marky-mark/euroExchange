@@ -1,6 +1,8 @@
 package exchangerate;
 
-import akka.actor.ActorSystem;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import controllers.DateSerializer;
 import dao.ExchangeRateDao;
 import dao.ExchangeRateDaoImpl;
 import europeancentralbank.CurrencyApiClient;
@@ -11,41 +13,17 @@ import play.Play;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
 
 public class Context {
 
-    private static ActorSystem system;
     private static ExchangeRateService exchangeRateService;
     public static final String EUROPEAN_BANK_API_PROPERTY = "european.bank.api";
     public static final String CASSANDRA_PORT_PROPERTY = "cassandra.port";
 
-    public static void init() {
-        initialiseActor();
-        initExchangeService();
-    }
+    private static Gson gsonParser;
 
-    private static void initialiseActor() {
-        system = ActorSystem.create("EuroExchange");
-    }
-
-    public static ActorSystem getActorSystem() {
-
-        if (system == null) {
-            initialiseActor();
-        }
-
-        return system;
-    }
-
-    public static ExchangeRateService getExchangeRateService() {
-        if (exchangeRateService == null) {
-            initExchangeService();
-        }
-
-        return exchangeRateService;
-    }
-
-    public static void initExchangeService() {
+    public static void initExchangeRate() {
 
         try {
             String europeanBankApiEndpoint = Play.configuration.getProperty(EUROPEAN_BANK_API_PROPERTY);
@@ -62,6 +40,23 @@ public class Context {
         } catch (URISyntaxException e) {
             Logger.error("Invalid URI - cannot instantiate Exchange Rate Api or DAO", e);
         }
+    }
+
+    public static ExchangeRateService getExchangeRateService() {
+        if (exchangeRateService == null) {
+            initExchangeRate();
+        }
+        return exchangeRateService;
+    }
+
+    public static Gson getGsonParser() {
+        if (gsonParser == null) {
+            GsonBuilder gson = new GsonBuilder();
+            gson.registerTypeAdapter(Date.class, new DateSerializer());
+            return gson.create();
+        }
+
+        return gsonParser;
     }
 
 }

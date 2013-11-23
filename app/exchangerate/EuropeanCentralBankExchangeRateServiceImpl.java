@@ -47,7 +47,7 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
         return playExchangeRates;
     }
 
-    public void updateExchangeRatesOverLastNinetyDaysIntoCassandra() {
+    public synchronized void updateExchangeRatesOverLastNinetyDaysIntoCassandra() {
         try {
             EuropeanCentralBankExchange exchangeRates = europeanCentralBankApi.getRatesOverLast90Days();
             insertExchangeRatesIntoCassandra(exchangeRates);
@@ -56,7 +56,7 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
         }
     }
 
-    public void updateExchangeRatesWithLatest() {
+    public synchronized void updateExchangeRatesWithLatest() {
         try {
             EuropeanCentralBankExchange exchangeRates = europeanCentralBankApi.getLatestRates();
             if (!alreadyInCassandra(exchangeRates)) {

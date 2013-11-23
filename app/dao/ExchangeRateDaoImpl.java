@@ -4,6 +4,7 @@ import com.netflix.astyanax.AstyanaxContext;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.NodeDiscoveryType;
 import com.netflix.astyanax.connectionpool.OperationResult;
+import com.netflix.astyanax.connectionpool.exceptions.BadRequestException;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.astyanax.connectionpool.impl.CountingConnectionPoolMonitor;
@@ -97,7 +98,9 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
                     .withCql(ExchangeRateDaoConstants.CREATE_STATEMENT)
                     .execute();
         }
-        catch (ConnectionException e) {
+        catch (BadRequestException e) {
+            Logger.error("column family must already exist");
+        } catch (ConnectionException e) {
             Logger.error("failed to create tables", e);
             throw new ExchangeRateDaoException(e);
         }
@@ -113,7 +116,9 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
                     .prepareQuery(exchangeRateColumnFamily)
                     .withCql(ExchangeRateDaoConstants.CREATE_SECONDARY_INDEX_STATEMENT)
                     .execute();
-        } catch (ConnectionException e) {
+        } catch (BadRequestException e) {
+            Logger.error("secondary index must already exist");
+        }  catch (ConnectionException e) {
             Logger.error("failed to create secondary index", e);
             throw new ExchangeRateDaoException(e);
         }
