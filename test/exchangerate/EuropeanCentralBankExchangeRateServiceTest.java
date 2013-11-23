@@ -8,14 +8,17 @@ import europeancentralbank.response.EuropeanCentralBankExchange;
 import europeancentralbank.response.ExchangeRate;
 import europeancentralbank.response.ExchangeRateTimes;
 import europeancentralbank.response.ExchangeRateWrapper;
+import models.PlayExchangeRate;
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import play.test.UnitTest;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
+import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
 
 public class EuropeanCentralBankExchangeRateServiceTest extends UnitTest {
@@ -30,6 +33,24 @@ public class EuropeanCentralBankExchangeRateServiceTest extends UnitTest {
         currencyApiClient = mock(CurrencyApiClient.class);
         exchangeRateDao = mock(ExchangeRateDao.class);
         exchangeRateService = new EuropeanCentralBankExchangeRateServiceImpl(currencyApiClient, exchangeRateDao);
+    }
+
+    @Test
+    public void shouldReturnASortedListOfExchangeRates() {
+        List<PlayExchangeRate> exchangeRatesFromDB = buildExchangeRatesFromDao();
+        when(exchangeRateDao.findRatesForCodeBetweenDates(eq("USD"),
+                org.mockito.Matchers.<Date>any(),
+                org.mockito.Matchers.<Date>any())).thenReturn(exchangeRatesFromDB);
+        List<PlayExchangeRate> sortedExchangeRates = exchangeRateService.getExchangeRates("USD");
+        assertThat(sortedExchangeRates.get(0).getDate().compareTo(sortedExchangeRates.get(1).getDate()), is(-1));
+    }
+
+    //this list is in opposite order for the test should sort them
+    private List<PlayExchangeRate> buildExchangeRatesFromDao() {
+        List<PlayExchangeRate> exchangeRates = new ArrayList<PlayExchangeRate>();
+        exchangeRates.add(new PlayExchangeRate(new DateTime().plusDays(1).toDate(), -1.123));
+        exchangeRates.add(new PlayExchangeRate(new DateTime().minusDays(1).toDate(), 1.123));
+        return exchangeRates;
     }
 
     @Test
@@ -80,8 +101,8 @@ public class EuropeanCentralBankExchangeRateServiceTest extends UnitTest {
 
     @Test
     public void shouldNotUpdateIfAlreadyInDb() {
-        Map<Date, Double> toReturnFromDao = new HashMap<Date, Double>();
-        toReturnFromDao.put(new Date(), 1.21);
+        List<PlayExchangeRate> toReturnFromDao = new ArrayList<PlayExchangeRate>();
+        toReturnFromDao.add(new PlayExchangeRate(new Date(), 1.21));
         when(currencyApiClient.getLatestRates()).thenReturn(buildExchangeRates());
         when(exchangeRateDao.findRatesForCodeBetweenDates(org.mockito.Matchers.<String>any(),
                 org.mockito.Matchers.<Date>any(),
@@ -97,7 +118,7 @@ public class EuropeanCentralBankExchangeRateServiceTest extends UnitTest {
         when(currencyApiClient.getLatestRates()).thenReturn(buildExchangeRates());
         when(exchangeRateDao.findRatesForCodeBetweenDates(org.mockito.Matchers.<String>any(),
                 org.mockito.Matchers.<Date>any(),
-                org.mockito.Matchers.<Date>any())).thenReturn(new HashMap<Date, Double>());
+                org.mockito.Matchers.<Date>any())).thenReturn(new ArrayList<PlayExchangeRate>());
         exchangeRateService.updateExchangeRatesWithLatest();
                 verify(exchangeRateDao, times(2)).insert(org.mockito.Matchers.<Date>any(),
                 org.mockito.Matchers.<String>any(),

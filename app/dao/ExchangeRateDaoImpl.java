@@ -16,11 +16,12 @@ import com.netflix.astyanax.serializers.DateSerializer;
 import com.netflix.astyanax.serializers.IntegerSerializer;
 import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
+import models.PlayExchangeRate;
 import play.Logger;
 
 import java.util.Date;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Adjusted code from netflix examples
@@ -95,7 +96,8 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
                     .prepareQuery(exchangeRateColumnFamily)
                     .withCql(ExchangeRateDaoConstants.CREATE_STATEMENT)
                     .execute();
-        } catch (ConnectionException e) {
+        }
+        catch (ConnectionException e) {
             Logger.error("failed to create tables", e);
             throw new ExchangeRateDaoException(e);
         }
@@ -172,14 +174,12 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
         timestamp.setSeconds(0);
     }
 
-    public Map<Date, Double> findRatesForCodeBetweenDates(String code, Date lessThan, Date moreThan) {
+    public List<PlayExchangeRate> findRatesForCodeBetweenDates(String code, Date lessThan, Date moreThan) {
 
         Logger.debug("finding exchange rates for code between dates");
 
         removeTimeFromDate(lessThan);
         removeTimeFromDate(moreThan);
-
-        Map<Date, Double> rates = new TreeMap<Date, Double>();
 
         try {
 
@@ -192,18 +192,24 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
                     .withByteBufferValue(moreThan, DateSerializer.get())
                     .execute();
 
-            for (Row<Integer, String> row : result.getResult().getRows()) {
-                ColumnList<String> cols = row.getColumns();
-                Double rate = cols.getDoubleValue(ExchangeRateDaoConstants.RATE, null);
-                Date date = cols.getDateValue(ExchangeRateDaoConstants.DATE, null);
-                rates.put(date, rate);
-            }
+            return convertToExchangeRateList(result);
         } catch (ConnectionException e) {
             Logger.error("failed to read from Cassandra", e);
             throw new ExchangeRateDaoException(e);
         }
 
-        return rates;
+    }
+
+    private List<PlayExchangeRate> convertToExchangeRateList(OperationResult<CqlResult<Integer, String>> result) {
+        List<PlayExchangeRate> playExchangeRates = new LinkedList<PlayExchangeRate>();
+        for (Row<Integer, String> row : result.getResult().getRows()) {
+            ColumnList<String> cols = row.getColumns();
+            Double rate = cols.getDoubleValue(ExchangeRateDaoConstants.RATE, null);
+            Date date = cols.getDateValue(ExchangeRateDaoConstants.DATE, null);
+            playExchangeRates.add(new PlayExchangeRate(date, rate));
+        }
+
+        return playExchangeRates;
     }
 
 }

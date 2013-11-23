@@ -1,4 +1,8 @@
 #{extends 'main.html' /}
 #{set title:'Home' /}
 
-#{welcome /}
+<script>
+
+createGraph("@{'/public/javascripts/data.json'}", "USD");
+
+</script>

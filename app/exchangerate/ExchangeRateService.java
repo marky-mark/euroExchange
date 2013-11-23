@@ -1,13 +1,13 @@
 package exchangerate;
 
 import dao.ExchangeRateDao;
+import models.PlayExchangeRate;
 
-import java.util.Date;
-import java.util.Map;
+import java.util.List;
 
 public interface ExchangeRateService {
     ExchangeRateDao getExchangeRateDao();
-    Map<Date, Double> getExchangeRates(String code);
+    List<PlayExchangeRate> getExchangeRates(String code);
     void updateExchangeRatesOverLastNinetyDaysIntoCassandra();
     void updateExchangeRatesWithLatest();
 }

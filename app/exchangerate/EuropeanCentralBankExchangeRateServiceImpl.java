@@ -7,12 +7,13 @@ import europeancentralbank.EuropeanCentralBankApiException;
 import europeancentralbank.response.EuropeanCentralBankExchange;
 import europeancentralbank.response.ExchangeRate;
 import europeancentralbank.response.ExchangeRateTimes;
+import models.PlayExchangeRate;
 import org.joda.time.DateTime;
 import play.Logger;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateService {
 
@@ -33,15 +34,17 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
         return exchangeRateDao;
     }
 
-    public Map<Date, Double> getExchangeRates(String code) {
+    public List<PlayExchangeRate> getExchangeRates(String code) {
 
         DateTime now = new DateTime();
         DateTime nintyDaysAgo = new DateTime().minusDays(PERIOD_OF_EXCHANGE);
 
-        Map<Date, Double> exchangeRates =
+        List<PlayExchangeRate> playExchangeRates =
                 exchangeRateDao.findRatesForCodeBetweenDates(code, now.toDate(), nintyDaysAgo.toDate());
 
-        return exchangeRates;
+        Collections.sort(playExchangeRates);
+
+        return playExchangeRates;
     }
 
     public void updateExchangeRatesOverLastNinetyDaysIntoCassandra() {
@@ -86,7 +89,7 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
         DateTime dayBefore = new DateTime(date).plusDays(1);
 
         try {
-            Map<Date, Double> rates = exchangeRateDao.findRatesForCodeBetweenDates("USD", dayAfter.toDate(), dayBefore.toDate());
+            List<PlayExchangeRate> rates = exchangeRateDao.findRatesForCodeBetweenDates("USD", dayBefore.toDate(), dayAfter.toDate());
             return rates.size() > NO_ENTRIES;
         } catch (ExchangeRateDaoException e) {
             Logger.error("Failed to insert into cassandra in service ", e);

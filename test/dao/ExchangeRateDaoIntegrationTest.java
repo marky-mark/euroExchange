@@ -1,15 +1,14 @@
 package dao;
 
+import models.PlayExchangeRate;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import play.test.UnitTest;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 
@@ -37,30 +36,25 @@ public class ExchangeRateDaoIntegrationTest extends UnitTest {
      */
     @Test
     public void shouldGetResultsInDatbaseOrderedByTimestamp() {
-        Date timestamp1 = new DateTime().plusDays(5).toDate();
+        Date date1 = new DateTime().plusDays(5).toDate();
         double rate1 = 8.01;
-        euroExchangeDAO.insert(timestamp1, "TEST", rate1);
-        Date timestamp2 = new DateTime().minusDays(3).toDate();
+        euroExchangeDAO.insert(date1, "TEST", rate1);
+        Date date2 = new DateTime().minusDays(3).toDate();
         double rate2 = 7.001;
-        euroExchangeDAO.insert(timestamp2, "TEST", rate2);
-        Date timestamp3 = new DateTime().minusDays(1).toDate();
+        euroExchangeDAO.insert(date2, "TEST", rate2);
+        Date date3 = new DateTime().minusDays(1).toDate();
         double rate3 = 2.0;
-        euroExchangeDAO.insert(timestamp3, "TEST", rate3);
+        euroExchangeDAO.insert(date3, "TEST", rate3);
 
         DateTime nextDay = new DateTime().plusDays(6);
         DateTime dayBefore = new DateTime().minusDays(4);
-        Map<Date, Double> exchangeRates = euroExchangeDAO.findRatesForCodeBetweenDates("TEST", nextDay.toDate(), dayBefore.toDate());
-        assertThat(exchangeRates.size(), is(3));
+        List<PlayExchangeRate> playExchangeRates = euroExchangeDAO.findRatesForCodeBetweenDates("TEST", nextDay.toDate(), dayBefore.toDate());
+        assertThat(playExchangeRates.size(), is(3));
 
-        //make sure in order of time
-        List<Date> dates = new ArrayList<Date>(exchangeRates.keySet());
-        List<Double> rates = new ArrayList<Double>(exchangeRates.values());
-        assertThat(dates.get(0), is(timestamp2));
-        assertThat(dates.get(1), is(timestamp3));
-        assertThat(dates.get(2), is(timestamp1));
-        assertThat(rates.get(0), is(rate2));
-        assertThat(rates.get(1), is(rate3));
-        assertThat(rates.get(2), is(rate1));
+        //List order is unpredictable
+        assertTrue(playExchangeRates.contains(new PlayExchangeRate(date1, rate1)));
+        assertTrue(playExchangeRates.contains(new PlayExchangeRate(date2, rate2)));
+        assertTrue(playExchangeRates.contains(new PlayExchangeRate(date3, rate3)));
     }
 
     @Test
@@ -72,7 +66,7 @@ public class ExchangeRateDaoIntegrationTest extends UnitTest {
 
         DateTime nextDay = new DateTime().plusDays(1);
         DateTime dayBefore = new DateTime().minusDays(1);
-        Map<Date, Double> exchangeRates = euroExchangeDAO.findRatesForCodeBetweenDates("TEST", nextDay.toDate(), dayBefore.toDate());
-        assertThat(exchangeRates.size(), is(0));
+        List<PlayExchangeRate> playExchangeRates = euroExchangeDAO.findRatesForCodeBetweenDates("TEST", nextDay.toDate(), dayBefore.toDate());
+        assertThat(playExchangeRates.size(), is(0));
     }
 }
