@@ -15,15 +15,15 @@ public class ExchangeRateController extends Controller {
         List<PlayExchangeRate> exchangeRatesForCode = getExchangeRatesForCode(code);
 
         if (!exchangeRatesFound(exchangeRatesForCode)) {
-            updateExchangeRatesOverLast90Days();
+            updateExchangeRatesOverLast90Days(code);
             exchangeRatesForCode = getExchangeRatesForCode(code);
         }
 
         renderJSON(Context.getGsonParser().toJson(exchangeRatesForCode));
     }
 
-    private static void updateExchangeRatesOverLast90Days() {
-        Context.getExchangeRateService().updateExchangeRatesOverLastNinetyDaysIntoCassandra();
+    private static void updateExchangeRatesOverLast90Days(String code) {
+        Context.getExchangeRateService().updateExchangeRatesOverLastNinetyDaysIntoCassandra(code);
     }
 
     private static boolean exchangeRatesFound(List<PlayExchangeRate> exchangeRatesForCode) {

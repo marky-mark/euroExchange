@@ -8,6 +8,6 @@ import java.util.List;
 public interface ExchangeRateService {
     ExchangeRateDao getExchangeRateDao();
     List<PlayExchangeRate> getExchangeRates(String code);
-    void updateExchangeRatesOverLastNinetyDaysIntoCassandra();
-    void updateExchangeRatesWithLatest();
+    void updateExchangeRatesOverLastNinetyDaysIntoCassandra(String code);
+    void updateExchangeRatesWithLatest(String code);
 }

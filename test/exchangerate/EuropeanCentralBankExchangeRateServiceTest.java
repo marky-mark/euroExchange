@@ -54,17 +54,38 @@ public class EuropeanCentralBankExchangeRateServiceTest extends UnitTest {
     }
 
     @Test
-    public void shouldInsertExchangeRatesFromApiToDao() {
+    public void shouldInsertExchangeRatesFromApiToDaoWithCodeOnly() {
         when(currencyApiClient.getRatesOverLast90Days()).thenReturn(buildExchangeRates());
-        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra();
+        when(exchangeRateDao.findRatesForCodeBetweenDates(eq("TEST1"),
+                org.mockito.Matchers.<Date>any(),
+                org.mockito.Matchers.<Date>any()))
+                .thenReturn(new ArrayList<PlayExchangeRate>());
+        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra("TEST1");
         verify(exchangeRateDao).insert(now, "TEST1", 1.234);
-        verify(exchangeRateDao).insert(now, "TEST2", 10.45);
+        verify(exchangeRateDao, never()).insert(now, "TEST2", 10.45);
     }
+
+    @Test
+    public void shouldNotInsertExchangeRatesFromApiToDaoIfDataRetreivedFromDB() {
+
+        List<PlayExchangeRate> exchangeRatesAlreadyInDB = new ArrayList<PlayExchangeRate>();
+        exchangeRatesAlreadyInDB.add(mock(PlayExchangeRate.class));
+
+        when(currencyApiClient.getRatesOverLast90Days()).thenReturn(buildExchangeRates());
+        when(exchangeRateDao.findRatesForCodeBetweenDates(eq("TEST1"),
+                org.mockito.Matchers.<Date>any(),
+                org.mockito.Matchers.<Date>any()))
+                .thenReturn(exchangeRatesAlreadyInDB);
+        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra("TEST1");
+        verify(exchangeRateDao, never()).insert(now, "TEST1", 1.234);
+        verify(exchangeRateDao, never()).insert(now, "TEST2", 10.45);
+    }
+
 
     @Test
     public void shouldFailGracefullyIfCannotWriteToCassandra() {
         when(currencyApiClient.getRatesOverLast90Days()).thenReturn(buildExchangeRates());
-        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra();
+        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra("TEST");
         doThrow(new ExchangeRateDaoException()).when(exchangeRateDao).insert(org.mockito.Matchers.<Date>any(),
                 org.mockito.Matchers.<String>any(),
                 org.mockito.Matchers.<Double>any());
@@ -73,7 +94,7 @@ public class EuropeanCentralBankExchangeRateServiceTest extends UnitTest {
     @Test
     public void shouldNotInsertExchangeRatesFromApiToDaoIfEmpty() {
         when(currencyApiClient.getRatesOverLast90Days()).thenReturn(new EuropeanCentralBankExchange());
-        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra();
+        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra("TEST");
         verify(exchangeRateDao, never()).insert(org.mockito.Matchers.<Date>any(),
                 org.mockito.Matchers.<String>any(),
                 org.mockito.Matchers.<Double>any());
@@ -82,7 +103,7 @@ public class EuropeanCentralBankExchangeRateServiceTest extends UnitTest {
     @Test
     public void shouldNotInsertExchangeRatesFromApiToDaoIfNull() {
         when(currencyApiClient.getRatesOverLast90Days()).thenReturn(null);
-        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra();
+        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra("TEST");
         verify(exchangeRateDao, never()).insert(org.mockito.Matchers.<Date>any(),
                 org.mockito.Matchers.<String>any(),
                 org.mockito.Matchers.<Double>any());
@@ -93,7 +114,7 @@ public class EuropeanCentralBankExchangeRateServiceTest extends UnitTest {
     @Test
     public void shouldFailElegantlyWhenExceptionThrownByApiClient() {
         when(currencyApiClient.getRatesOverLast90Days()).thenThrow(new EuropeanCentralBankApiException("test"));
-        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra();
+        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra("TEST");
         verify(exchangeRateDao, never()).insert(org.mockito.Matchers.<Date>any(),
                 org.mockito.Matchers.<String>any(),
                 org.mockito.Matchers.<Double>any());
@@ -104,10 +125,10 @@ public class EuropeanCentralBankExchangeRateServiceTest extends UnitTest {
         List<PlayExchangeRate> toReturnFromDao = new ArrayList<PlayExchangeRate>();
         toReturnFromDao.add(new PlayExchangeRate(new Date(), 1.21));
         when(currencyApiClient.getLatestRates()).thenReturn(buildExchangeRates());
-        when(exchangeRateDao.findRatesForCodeBetweenDates(org.mockito.Matchers.<String>any(),
+        when(exchangeRateDao.findRatesForCodeBetweenDates(eq("TEST"),
                 org.mockito.Matchers.<Date>any(),
                 org.mockito.Matchers.<Date>any())).thenReturn(toReturnFromDao);
-        exchangeRateService.updateExchangeRatesWithLatest();
+        exchangeRateService.updateExchangeRatesWithLatest("TEST");
                 verify(exchangeRateDao, never()).insert(org.mockito.Matchers.<Date>any(),
                 org.mockito.Matchers.<String>any(),
                 org.mockito.Matchers.<Double>any());
@@ -116,12 +137,12 @@ public class EuropeanCentralBankExchangeRateServiceTest extends UnitTest {
     @Test
     public void shouldUpdateIfNotAlreadyInDb() {
         when(currencyApiClient.getLatestRates()).thenReturn(buildExchangeRates());
-        when(exchangeRateDao.findRatesForCodeBetweenDates(org.mockito.Matchers.<String>any(),
+        when(exchangeRateDao.findRatesForCodeBetweenDates(eq("TEST1"),
                 org.mockito.Matchers.<Date>any(),
                 org.mockito.Matchers.<Date>any())).thenReturn(new ArrayList<PlayExchangeRate>());
-        exchangeRateService.updateExchangeRatesWithLatest();
-                verify(exchangeRateDao, times(2)).insert(org.mockito.Matchers.<Date>any(),
-                org.mockito.Matchers.<String>any(),
+        exchangeRateService.updateExchangeRatesWithLatest("TEST1");
+        verify(exchangeRateDao, times(1)).insert(org.mockito.Matchers.<Date>any(),
+                eq("TEST1"),
                 org.mockito.Matchers.<Double>any());
     }
 

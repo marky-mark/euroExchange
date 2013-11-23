@@ -40,10 +40,10 @@ public class ExchangeRateServiceIntegrationTest extends UnitTest {
 
     @Test
     public void shouldUpdateDatabaseAndGetExchangeRate() {
-        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra();
+        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra("USD");
         List<PlayExchangeRate> exchangeRates = exchangeRateService.getExchangeRates("USD");
         assertThat(exchangeRates.size() > 50, is(true));
-        exchangeRateService.updateExchangeRatesWithLatest();
+        exchangeRateService.updateExchangeRatesWithLatest("USD");
         List<PlayExchangeRate> exchangeRatesAfterUpdate = exchangeRateService.getExchangeRates("USD");
         assertThat(exchangeRatesAfterUpdate.size(), is(exchangeRates.size()));
     }
