@@ -47,48 +47,25 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
         return playExchangeRates;
     }
 
-    /**
-     * This is thread safe...only 1 thread may enter
-     * @param code
-     */
-    public synchronized void updateExchangeRatesOverLastNinetyDaysIntoCassandra(String code) {
+    public void updateExchangeRatesOverLastNinetyDaysIntoCassandra(String code) {
         try {
-            //if multiple threads enter do a recheck before inserting data (may have already been done)
-            if (getExchangeRates(code).size() == NO_ENTRIES) {
-                EuropeanCentralBankExchange exchangeRates = europeanCentralBankApi.getRatesOverLast90Days();
-                insertExchangeRatesIntoCassandra(exchangeRates, code);
-            }
+            EuropeanCentralBankExchange exchangeRates = europeanCentralBankApi.getRatesOverLast90Days();
+            insertExchangeRatesIntoCassandra(exchangeRates, code);
         } catch (EuropeanCentralBankApiException e) {
             Logger.error("error cannot connect to central european bank api ", e);
         }
     }
 
-    public synchronized void updateExchangeRatesWithLatest(String code) {
+    public void updateExchangeRatesWithLatest(String code) {
         try {
             EuropeanCentralBankExchange exchangeRates = europeanCentralBankApi.getLatestRates();
-            if (!alreadyInCassandra(exchangeRates, code)) {
-                insertExchangeRatesIntoCassandra(exchangeRates, code);
-            }
+            insertExchangeRatesIntoCassandra(exchangeRates, code);
         } catch (EuropeanCentralBankApiException e) {
             Logger.error("error cannot connect to central european bank api ", e);
         }
     }
 
     //helper methods
-
-    private boolean alreadyInCassandra(EuropeanCentralBankExchange exchangeRates, String code) {
-        if (exchangeRateRootContainsData(exchangeRates)) {
-
-            List<ExchangeRateTimes> exchangeRateTimesList = exchangeRates.getExchangeRateWrapper().getExchangeRateTimes();
-
-            if (exchangeRateTimesList != null && exchangeRateTimesList.get(0).getExchangeRates() != null) {
-                return alreadyInCassandra(exchangeRateTimesList.get(0).getDate(), code);
-            }
-        }
-
-        return false;
-
-    }
 
     private boolean alreadyInCassandra(Date date, String code) {
         //unfortunately cassandra must have a Primary Key when querying
@@ -133,14 +110,15 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
         }
     }
 
-    private void insertExchangeRateIntoCassandra(Date time, ExchangeRate exchangeRate, String code) {
+    //This is thread safe - only writes to db if it does not exist
+    private synchronized void insertExchangeRateIntoCassandra(Date time, ExchangeRate exchangeRate, String code) {
         if (time != null
                 && exchangeRate != null
                 && exchangeRate.getCurrency() != null
                 && exchangeRate.getRate() != null) {
             try {
                 //lazy loading - avoiding all data being entered into DB
-                if (code.equals(exchangeRate.getCurrency())) {
+                if (code.equals(exchangeRate.getCurrency()) && !alreadyInCassandra(time, code)) {
                     exchangeRateDao.insert(time, exchangeRate.getCurrency(), exchangeRate.getRate());
                 }
             } catch (ExchangeRateDaoException e) {

@@ -37,7 +37,6 @@ import java.util.List;
 public class ExchangeRateDaoImpl implements ExchangeRateDao {
 
     public static final String KEYSPACE_NAME = "euro_exchange_rate";
-    public static final int NO_ROWS = 0;
     private AstyanaxContext<Keyspace> context;
     private Keyspace keyspace;
     private ColumnFamily<Integer, String> exchangeRateColumnFamily;
@@ -98,6 +97,7 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
                     .withCql(ExchangeRateDaoConstants.CREATE_STATEMENT)
                     .execute();
         }
+        //    A bad request is usually thrown if a column family exists
         catch (BadRequestException e) {
             Logger.error("column family must already exist");
         } catch (ConnectionException e) {
@@ -116,6 +116,7 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
                     .prepareQuery(exchangeRateColumnFamily)
                     .withCql(ExchangeRateDaoConstants.CREATE_SECONDARY_INDEX_STATEMENT)
                     .execute();
+            //    A bad request is usually thrown if secondary index exists
         } catch (BadRequestException e) {
             Logger.error("secondary index must already exist");
         }  catch (ConnectionException e) {
