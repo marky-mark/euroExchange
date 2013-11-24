@@ -1,4 +1,4 @@
-package exchangerate;
+package service;
 
 import dao.ExchangeRateDao;
 import dao.ExchangeRateDaoImpl;
@@ -40,7 +40,7 @@ public class ExchangeRateServiceIntegrationTest extends UnitTest {
 
     @Test
     public void shouldUpdateDatabaseAndGetExchangeRate() {
-        exchangeRateService.updateExchangeRatesOverLastNinetyDaysIntoCassandra("USD");
+        exchangeRateService.updateExchangeRatesOverLastNinetyDays("USD");
         List<PlayExchangeRate> exchangeRates = exchangeRateService.getExchangeRates("USD");
         assertThat(exchangeRates.size() > 50, is(true));
         exchangeRateService.updateExchangeRatesWithLatest("USD");

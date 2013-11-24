@@ -1,4 +1,4 @@
-package exchangerate;
+package service;
 
 import dao.ExchangeRateDao;
 import dao.ExchangeRateDaoException;
@@ -49,29 +49,34 @@ public class EuropeanCentralBankExchangeRateService implements ExchangeRateServi
     }
 
     @Override
-    public void updateExchangeRatesOverLastNinetyDaysIntoCassandra(String code) {
+    public boolean updateExchangeRatesOverLastNinetyDays(String code) {
         try {
             EuropeanCentralBankExchange exchangeRates = europeanCentralBankApi.getRatesOverLast90Days();
             insertExchangeRatesIntoCassandra(exchangeRates, code);
         } catch (EuropeanCentralBankApiException e) {
             Logger.error("error cannot connect to central european bank api ", e);
+            return false;
         }
+
+        return true;
     }
 
     @Override
-    public void updateExchangeRatesWithLatest(String code) {
+    public boolean updateExchangeRatesWithLatest(String code) {
         try {
             EuropeanCentralBankExchange exchangeRates = europeanCentralBankApi.getLatestRates();
             insertExchangeRatesIntoCassandra(exchangeRates, code);
         } catch (EuropeanCentralBankApiException e) {
             Logger.error("error cannot connect to central european bank api ", e);
+            return false;
         }
+
+        return true;
     }
 
     @Override
-    public void updateAllExchangeRatesWithLatest() {
-        updateExchangeRatesOverLastNinetyDaysIntoCassandra(null);
-        updateExchangeRatesWithLatest(null);
+    public boolean updateAllExchangeRatesWithLatest() {
+        return updateExchangeRatesOverLastNinetyDays(null) && updateExchangeRatesWithLatest(null);
     }
 
     //helper methods
