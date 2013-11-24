@@ -36,7 +36,7 @@ public class Context {
             exchangeRateDao.init(cassandraPort);
 
 
-            exchangeRateService = new EuropeanCentralBankExchangeRateServiceImpl(europeanBankApi, exchangeRateDao);
+            exchangeRateService = new EuropeanCentralBankExchangeRateService(europeanBankApi, exchangeRateDao);
         } catch (URISyntaxException e) {
             Logger.error("Invalid URI - cannot instantiate Exchange Rate Api or DAO", e);
         }

@@ -36,6 +36,18 @@ public class ExchangeRateTest extends FunctionalTest {
         //TODO: Test the content
     }
 
+    @Test
+    public void shouldRefreshAllAndGetExchangeRates() {
+        Http.Response response = GET("/exchange-rate/USD/refresh/all");
+        assertIsOk(response);
+        assertContentType("application/json", response);
+        assertCharset(play.Play.defaultWebEncoding, response);
+        Gson gson = new GsonBuilder().create();
+        List data = gson.fromJson(getContent(response), List.class);
+        assertThat(data.size() > 0, is(true));
+        //TODO: Test the content
+    }
+
     //TODO: test non existing currency codes
 
 }

@@ -42,6 +42,13 @@ function refreshDataAndPlotExchangeRatesToGraph() {
     createGraph(code, "exchange-rate/" + code + "/refresh");
 }
 
+function refreshAllDataAndPlotExchangeRatesToGraph() {
+    var selectObject = document.getElementById('currency-select');
+    var code = selectObject.value;
+    removeGraph();
+    createGraph(code, "exchange-rate/" + code + "/refresh/all");
+}
+
 function createGraph(code, fetchExchangeRatesUrl) {
 
     var svg = d3.select("body").append("svg")

@@ -24,7 +24,14 @@ public class ExchangeRateController extends Controller {
 
     public static void refreshExchangeRate(String code) {
         Context.getExchangeRateService().updateExchangeRatesWithLatest(code);
-        getExchangeRate(code);
+        List<PlayExchangeRate> exchangeRatesForCode = getExchangeRatesForCode(code);
+        renderJSON(Context.getGsonParser().toJson(exchangeRatesForCode));
+    }
+
+    public static void refreshAllExchangeRates(String code) {
+        Context.getExchangeRateService().updateAllExchangeRatesWithLatest();
+        List<PlayExchangeRate> exchangeRatesForCode = getExchangeRatesForCode(code);
+        renderJSON(Context.getGsonParser().toJson(exchangeRatesForCode));
     }
 
     private static void updateExchangeRatesOverLast90Days(String code) {

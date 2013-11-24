@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateService {
+public class EuropeanCentralBankExchangeRateService implements ExchangeRateService {
 
     public static final int NO_ENTRIES = 0;
     public static final int PERIOD_OF_EXCHANGE = 90;
@@ -23,8 +23,8 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
     private CurrencyApiClient europeanCentralBankApi;
     private ExchangeRateDao exchangeRateDao;
 
-    public EuropeanCentralBankExchangeRateServiceImpl(CurrencyApiClient europaCurrencyApi,
-                                                      ExchangeRateDao exchangeRateDao) {
+    public EuropeanCentralBankExchangeRateService(CurrencyApiClient europaCurrencyApi,
+                                                  ExchangeRateDao exchangeRateDao) {
         this.europeanCentralBankApi = europaCurrencyApi;
         this.exchangeRateDao = exchangeRateDao;
     }
@@ -34,6 +34,7 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
         return exchangeRateDao;
     }
 
+    @Override
     public List<PlayExchangeRate> getExchangeRates(String code) {
 
         DateTime now = new DateTime();
@@ -47,6 +48,7 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
         return playExchangeRates;
     }
 
+    @Override
     public void updateExchangeRatesOverLastNinetyDaysIntoCassandra(String code) {
         try {
             EuropeanCentralBankExchange exchangeRates = europeanCentralBankApi.getRatesOverLast90Days();
@@ -56,6 +58,7 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
         }
     }
 
+    @Override
     public void updateExchangeRatesWithLatest(String code) {
         try {
             EuropeanCentralBankExchange exchangeRates = europeanCentralBankApi.getLatestRates();
@@ -65,10 +68,15 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
         }
     }
 
+    @Override
+    public void updateAllExchangeRatesWithLatest() {
+        updateExchangeRatesOverLastNinetyDaysIntoCassandra(null);
+        updateExchangeRatesWithLatest(null);
+    }
+
     //helper methods
 
     private boolean alreadyInCassandra(Date date, String code) {
-        //unfortunately cassandra must have a Primary Key when querying
         DateTime dayAfter = new DateTime(date).minusDays(1);
         DateTime dayBefore = new DateTime(date).plusDays(1);
 
@@ -117,8 +125,7 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
                 && exchangeRate.getCurrency() != null
                 && exchangeRate.getRate() != null) {
             try {
-                //lazy loading - avoiding all data being entered into DB
-                if (code.equals(exchangeRate.getCurrency()) && !alreadyInCassandra(time, code)) {
+                if (mayInsertIntoCassandra(time, exchangeRate, code)) {
                     exchangeRateDao.insert(time, exchangeRate.getCurrency(), exchangeRate.getRate());
                 }
             } catch (ExchangeRateDaoException e) {
@@ -127,6 +134,11 @@ public class EuropeanCentralBankExchangeRateServiceImpl implements ExchangeRateS
         } else {
             Logger.error("Some faulty data attempting to be stored to DB");
         }
+    }
+
+    //lazy loading - avoiding all data being entered into DB, code is null to let everything
+    private boolean mayInsertIntoCassandra(Date time, ExchangeRate exchangeRate, String code) {
+        return code == null || code.equals(exchangeRate.getCurrency()) && !alreadyInCassandra(time, code);
     }
 
     private List<ExchangeRateTimes> getExchangeRateTimes(EuropeanCentralBankExchange exchange) {

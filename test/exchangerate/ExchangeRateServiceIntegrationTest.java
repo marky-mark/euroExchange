@@ -19,7 +19,7 @@ import static org.hamcrest.core.Is.is;
 
 public class ExchangeRateServiceIntegrationTest extends UnitTest {
 
-    private ExchangeRateService exchangeRateService;
+    private EuropeanCentralBankExchangeRateService exchangeRateService;
 
     @Before
     public void setup() throws URISyntaxException {
@@ -30,7 +30,7 @@ public class ExchangeRateServiceIntegrationTest extends UnitTest {
         DefaultRestResourceSupplier restResourceSupplier = new DefaultRestResourceSupplier(new URI("http://www.ecb.europa.eu/stats/eurofxref"));
         CurrencyApiClient europeanBankApi = new EuropeanCentralBankApiClient(restResourceSupplier);
 
-        exchangeRateService = new EuropeanCentralBankExchangeRateServiceImpl(europeanBankApi, exchangeRateDao);
+        exchangeRateService = new EuropeanCentralBankExchangeRateService(europeanBankApi, exchangeRateDao);
     }
 
     @After

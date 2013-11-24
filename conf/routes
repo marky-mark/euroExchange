@@ -12,5 +12,7 @@ GET     /favicon.ico                            404
 GET     /public/                                staticDir:public
 
 # Ajax
-GET     /exchange-rate/{code}                    ExchangeRateController.getExchangeRate
-GET     /exchange-rate/{code}/refresh            ExchangeRateController.refreshExchangeRate
+GET     /exchange-rate/{code}                   ExchangeRateController.getExchangeRate
+GET     /exchange-rate/{code}/refresh           ExchangeRateController.refreshExchangeRate
+# not exactly restful below
+GET     /exchange-rate/{code}/refresh/all       ExchangeRateController.refreshAllExchangeRates
