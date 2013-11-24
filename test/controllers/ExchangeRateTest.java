@@ -8,6 +8,8 @@ import play.test.FunctionalTest;
 
 import java.util.List;
 
+import static org.hamcrest.core.Is.is;
+
 public class ExchangeRateTest extends FunctionalTest {
 
     @Test
@@ -18,7 +20,22 @@ public class ExchangeRateTest extends FunctionalTest {
         assertCharset(play.Play.defaultWebEncoding, response);
         Gson gson = new GsonBuilder().create();
         List data = gson.fromJson(getContent(response), List.class);
+        assertThat(data.size() > 0, is(true));
         //TODO: Test the content
     }
+
+    @Test
+    public void shouldRefreshAndGetExchangeRates() {
+        Http.Response response = GET("/exchange-rate/USD/refresh");
+        assertIsOk(response);
+        assertContentType("application/json", response);
+        assertCharset(play.Play.defaultWebEncoding, response);
+        Gson gson = new GsonBuilder().create();
+        List data = gson.fromJson(getContent(response), List.class);
+        assertThat(data.size() > 0, is(true));
+        //TODO: Test the content
+    }
+
+    //TODO: test non existing currency codes
 
 }

@@ -1,13 +1,9 @@
 #{extends 'main.html' /}
 #{set title:'Home' /}
 
-<script>
-    createGraph("USD");
-</script>
-
-<div name="currency-div" position="bottom">
+<div name="currency-div" position="top">
     <!--These should really be retreived from DB but how can it with lazy loading-->
-    <select name="currency-select" onchange='remove();createGraph(this.value)'>
+    <select name="currency-select" onchange='removeGraph();plotExchangeRatesToGraph(this.value)'>
         <option value="USD">USD</option>
         <option value="JPY">JPY</option>
         <option value="BGN">BGN</option>
@@ -44,3 +40,7 @@
         <option value="ZAR">ZAR</option>
     </select>
 </div>
+
+<script>
+    plotExchangeRatesToGraph("USD");
+</script>
