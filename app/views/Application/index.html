@@ -1,11 +1,12 @@
 #{extends 'main.html' /}
-#{set title:'Home' /}
+#{set title:'Euro Exchange Rates' /}
 
-<div name="currency-div" position="top">
+<div>
     <!--These should really be retreived from DB but how can it with lazy loading-->
-    <select name="currency-select" onchange='removeGraph();plotExchangeRatesToGraph(this.value)'>
-        <option value="USD">USD</option>
-        <option value="JPY">JPY</option>
+    <select id="currency-select"
+            onchange='removeGraph();plotExchangeRatesToGraph(this.value)'>
+        <option value="USD">US Dollar</option>
+        <option value="JPY">Japanese Yen</option>
         <option value="BGN">BGN</option>
         <option value="CZK">CZK</option>
         <option value="DKK">DKK</option>
@@ -39,6 +40,10 @@
         <option value="THB">THB</option>
         <option value="ZAR">ZAR</option>
     </select>
+</div>
+<div>
+
+    <button class="btn" position="right" onclick="refreshDataAndPlotExchangeRatesToGraph()">Refresh</button>
 </div>
 
 <script>

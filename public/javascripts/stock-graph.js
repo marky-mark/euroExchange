@@ -35,7 +35,10 @@ function plotExchangeRatesToGraph(code) {
     createGraph(code, "exchange-rate/" + code);
 }
 
-function refreshDataAndPlotExchangeRatesToGraph(code) {
+function refreshDataAndPlotExchangeRatesToGraph() {
+    var selectObject = document.getElementById('currency-select');
+    var code = selectObject.value;
+    removeGraph();
     createGraph(code, "exchange-rate/" + code + "/refresh");
 }
 
