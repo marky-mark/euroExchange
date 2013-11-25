@@ -2,6 +2,7 @@ package controllers;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.commons.lang.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import play.mvc.Http;
@@ -56,7 +57,7 @@ public class ExchangeRateTest extends FunctionalTest {
 
         Http.Response result = GET(url);
 
-        while (result.status == 200 && "".equals(result.out.toString())) {
+        while (result.status == 200 && StringUtils.isEmpty(result.out.toString())) {
             sleep(1);
         }
 
